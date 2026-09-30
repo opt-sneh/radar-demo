@@ -118,6 +118,8 @@ public class GenerateForecastMetrics : ExampleBase
     /// </summary>
     private CampaignToForecast CreateCampaignToForecast()
     {
+        // NOTE: V25 removed CampaignToForecast.KeywordPlanNetwork (previously GoogleSearch);
+        // the request can no longer restrict the network.
         CampaignToForecast campaignToForecast = new CampaignToForecast()
         {
             BiddingStrategy = new CampaignToForecast.Types.CampaignBiddingStrategy()
@@ -142,6 +144,11 @@ public class GenerateForecastMetrics : ExampleBase
         // Create forecast ad group based on themes such as creative relevance, product category,
         // or cost per click.
         ForecastAdGroup forecastAdGroup = new ForecastAdGroup();
+
+        // NOTE: V25 removed per-keyword max CPC bids (BiddableKeyword.MaxCpcBidMicros), so
+        // every keyword below is forecast with the campaign-level manual CPC bid. V25 also
+        // removed ForecastAdGroup.NegativeKeywords, so the former "moon walk" negative keyword
+        // can no longer be excluded from the forecast.
 
         forecastAdGroup.Keywords.Add(new KeywordInfo()
         {
