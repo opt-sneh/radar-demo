@@ -1,10 +1,17 @@
-# Comment "@claude fix this" on a radar Issue: Claude fixes it on a branch and opens a draft PR.
+# "@claude ..." from someone with write access:
+# - on a radar Issue: Claude fixes it on a new radar/fix-… branch and opens a draft PR;
+# - on a pull request (comment, inline review comment, or review): Claude reads the PR, its reviews
+#   (including review bots) and comments, and pushes follow-up fixes to that same PR branch.
 # Uses the secret CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`); no API key needed.
 name: radar-fix
 
 on:
   issue_comment:
     types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
 
 permissions:
   contents: write
@@ -13,14 +20,22 @@ permissions:
   id-token: write
   actions: read
 
+# One Claude run per Issue or PR at a time, so two comments don't push competing changes.
+concurrency:
+  group: radar-fix-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   fix:
-    # Only on Issues (not PRs) labelled radar, and only for people with write access.
     if: >
-      github.event.issue.pull_request == null &&
-      contains(github.event.comment.body, '@claude') &&
-      contains(github.event.issue.labels.*.name, 'radar') &&
-      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+        github.event.comment.author_association || github.event.review.author_association) &&
+      (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') &&
+          (github.event.issue.pull_request != null || contains(github.event.issue.labels.*.name, 'radar'))) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude'))
+      )
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -39,5 +54,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           branch_prefix: radar/fix-
+          # Read-only inspection tools plus the build and checks from CLAUDE.md. Pushing goes through the
+          # action's own git-push script, which only pushes the working branch.
           claude_args: >-
-            --allowedTools "Edit,Write,Read,Glob,Grep,Bash(dotnet build:*),Bash(dotnet restore:*),Bash(bash .github/scripts/dry-run-examples.sh:*),Bash(grep:*),Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh issue view:*)"
+            --allowedTools "Edit,Write,Read,Glob,Grep,LS,Bash(ls:*),Bash(find:*),Bash(cat:*),Bash(head:*),Bash(tail:*),Bash(wc:*),Bash(diff:*),Bash(grep:*),Bash(dotnet build:*),Bash(dotnet restore:*),Bash(bash .github/scripts/dry-run-examples.sh:*),Bash(git:*),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr diff:*),Bash(gh pr checks:*),Bash(gh issue view:*),Bash(gh api repos/opt-sneh/radar-demo/pulls:*)"

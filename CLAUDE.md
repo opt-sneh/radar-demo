@@ -35,3 +35,9 @@ grep -oE '\b(GoogleAds|Services)\.V[0-9]+\b' <file> | grep -oE 'V[0-9]+' | sort 
 - Open one **draft** with `gh pr create --draft`, titled `Fix radar #<issue>: API upgrade v23 -> v25`.
 - Body: one line per finding (numbered as in the Issue) with what changed, the "Required by the SDK bump" list if any, `Fixes #<issue>`, and the tail of each check's output.
 - The `build` workflow reruns these checks on the pull request and must be green.
+
+## Asked on an existing pull request
+
+- Push to that pull request's branch. Never open a second pull request.
+- Read every review and comment, including review bots: `gh pr view <n> --comments` and `gh api repos/opt-sneh/radar-demo/pulls/<n>/comments`.
+- For each point: fix it if it is correct and within scope; otherwise reply saying why not. Rerun all three checks after the changes.
