@@ -1,0 +1,80 @@
+# Runs Ad API Radar on this repository and turns actionable findings into Issues.
+# Needs the secret RADAR_REPO_TOKEN: a fine-grained token with read access to opt-sneh/ad-api-radar.
+name: radar-scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      radar_ref:
+        description: Branch or tag of ad-api-radar to run
+        default: main
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: radar-scan
+  cancel-in-progress: false
+
+jobs:
+  scan:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out this repository
+        uses: actions/checkout@v4
+        with:
+          path: target
+          fetch-depth: 0
+
+      - name: Check out Ad API Radar
+        uses: actions/checkout@v4
+        with:
+          repository: opt-sneh/ad-api-radar
+          ref: ${{ inputs.radar_ref || 'main' }}
+          token: ${{ secrets.RADAR_REPO_TOKEN }}
+          path: radar
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Run radar
+        shell: pwsh
+        run: >
+          dotnet run --project radar/src/Radar -c Release --no-launch-profile --
+          run --repo "$env:GITHUB_WORKSPACE/target" --ref HEAD
+          --sln Examples.slnx --bench-path . --platform google
+
+      - name: Find the run folder
+        id: run
+        shell: pwsh
+        run: |
+          $sha = (git -C target rev-parse HEAD).Substring(0, 11)
+          "dir=radar/data/runs/$sha" >> $env:GITHUB_OUTPUT
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        with:
+          name: radar-report
+          path: |
+            ${{ steps.run.outputs.dir }}/report.html
+            ${{ steps.run.outputs.dir }}/findings.json
+            ${{ steps.run.outputs.dir }}/summary.json
+            ${{ steps.run.outputs.dir }}/fixes/**
+
+      - name: Sync Issues
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          radar/scripts/sync-issues.ps1
+          -Findings "${{ steps.run.outputs.dir }}/findings.json"
+          -Repo "${{ github.repository }}"
+          -RunUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          -BuildCommand "dotnet build Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj -f net8.0"

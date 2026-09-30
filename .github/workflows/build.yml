@@ -1,0 +1,21 @@
+# Builds the examples on every push and pull request, so a fix PR shows a pass or fail check.
+name: build
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Build examples
+        run: dotnet build Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj -f net8.0 -nologo
