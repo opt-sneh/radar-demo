@@ -1,27 +1,37 @@
-# radar-demo: rules for fixing radar Issues
+# Fixing radar Issues
 
-This repository is a copy of Google's `google-ads-dotnet` examples at tag `v25.1.0` (Google Ads API v23). Ad API Radar opens Issues for code that breaks or changes behaviour in newer API versions. These rules apply every time you are asked to fix one.
+Google's `google-ads-dotnet` examples at `v25.1.0` (Google Ads API v23). Ad API Radar opens one Issue per file that breaks or changes behaviour in a newer API version. A person reviews every fix, so an honest "not verified" is better than a wrong "done".
 
-## Scope
+## Rules
 
-- Fix every finding listed in the Issue, and nothing else. Do not reformat, rename or refactor unrelated code.
-- Keep behaviour the same: replace a removed field or type with its documented replacement instead of deleting the feature. The Issue's evidence quotes Google's release notes; use them.
-- Do not edit `LICENSE`, `THIRD-PARTY-LICENSE.txt`, `GoogleAds.snk`, `Examples.slnx` or anything under `.github/`.
+- **IMPORTANT:** Fix every finding in the Issue and nothing else. No reformatting, renaming or refactoring; small diffs are what make review possible.
+- **IMPORTANT:** Keep the feature working. Use the replacement Google documents (quoted in the Issue's evidence); never delete the code that used a removed field.
+- Never edit `LICENSE`, `THIRD-PARTY-LICENSE.txt`, `GoogleAds.snk`, `Examples.slnx` or `.github/`.
+- Never push to `main`, merge, or turn off warnings-as-errors.
 
 ## Moving to a newer API version
 
-- A finding marked "removed in v24" or "v25" needs the newer API. Bump the `Google.Ads.GoogleAds` package in `Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj` to `26.1.0`. It ships V25 and still ships V23, so the other files keep building.
-- Move only the files named in the Issue from `Google.Ads.GoogleAds.V23` to `Google.Ads.GoogleAds.V25` (usings, `Services.V23.…` and every other `V23` reference in those files).
+Findings "removed in v24/v25" need the newer API:
+1. Set `Google.Ads.GoogleAds` to `26.1.0` in `Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj` (first SDK with V25).
+2. In the Issue's file, move every API reference to V25: `using Google.Ads.GoogleAds.V23…` and `Services.V23.…`. **Keep** the file's own `namespace Google.Ads.GoogleAds.Examples.V23`; it is the example's name, and other files refer to it.
+3. **The SDK bump can break files you did not touch** (26.1.0 drops SDK helpers such as `PartialFailure` from V23). Build the whole project; for each newly broken file, move its API references to V25 the same way and change nothing else. List those files in the PR under "Required by the SDK bump".
 
-## Build
+## Verify before you say it is fixed
 
-- The build must pass before you open a pull request:
-  `dotnet build Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj -f net8.0`
-- Warnings are errors in this project. Fix warnings you introduce; do not turn the setting off.
+Run all three and read the output. All must pass.
+
+```
+dotnet build Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj -f net8.0
+bash .github/scripts/dry-run-examples.sh <every file you changed>
+grep -oE '\b(GoogleAds|Services)\.V[0-9]+\b' <file> | grep -oE 'V[0-9]+' | sort -u   # one version per file
+```
+
+- The build must end with `0 Warning(s)` and `0 Error(s)`.
+- The dry run starts each changed example without credentials and must print `ok` for each. It never calls the API.
+- If a check fails, fix it and rerun all three. If you cannot make them pass, do not open a pull request: comment on the Issue with what failed and the output.
 
 ## Pull request
 
-- Work on your own branch. Never push to `main` and never merge.
-- Open a **draft** pull request with `gh pr create --draft`.
-- Title: `Fix radar #<issue number>: <file name>`.
-- Body: one line per finding saying what changed, `Fixes #<issue number>`, and the last lines of the build output.
+- Open a **draft** with `gh pr create --draft`, titled `Fix radar #<issue>: <file>`.
+- Body: one line per finding with what changed, the "Required by the SDK bump" list if any, `Fixes #<issue>`, and the tail of each check's output.
+- The `build` workflow reruns these checks on the pull request and must be green.

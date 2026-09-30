@@ -1,4 +1,5 @@
-# Builds the examples on every push and pull request, so a fix PR shows a pass or fail check.
+# Proves a fix on every pull request (and every push to a radar/fix-… branch):
+# build, dry-run the changed examples, and reject files left half-migrated between API versions.
 name: build
 
 on:
@@ -15,8 +16,34 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
-      - name: Build examples
+
+      - name: Build examples (warnings are errors)
         run: dotnet build Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj -f net8.0 -nologo
+
+      - name: List changed files
+        id: changed
+        run: |
+          base="${{ github.base_ref || 'main' }}"
+          git fetch -q origin "$base"
+          files=$(git diff --name-only "origin/$base...HEAD" | tr '\n' ' ')
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+          echo "Changed: ${files:-none}"
+
+      - name: Dry-run changed examples
+        run: bash .github/scripts/dry-run-examples.sh ${{ steps.changed.outputs.files }}
+
+      - name: No half-migrated files
+        run: |
+          bad=0
+          for f in ${{ steps.changed.outputs.files }}; do
+            [[ "$f" == *.cs && -f "$f" ]] || continue
+            # API references only (Google.Ads.GoogleAds.Vnn, Services.Vnn); the example's own namespace is its name.
+            versions=$(grep -oE '\b(GoogleAds|Services)\.V[0-9]+\b' "$f" | grep -oE 'V[0-9]+' | sort -u | tr '\n' ' ')
+            if [[ $(wc -w <<< "$versions") -gt 1 ]]; then echo "FAIL $f mixes API versions: $versions"; bad=1; fi
+          done
+          exit $bad
