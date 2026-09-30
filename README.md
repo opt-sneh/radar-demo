@@ -12,7 +12,7 @@ The code is Google's, under the Apache License 2.0 (see `LICENSE` and `THIRD-PAR
 |---|---|---|
 | `radar-scan` | Manual run or Mondays 06:00 UTC | Runs radar, uploads the HTML report, and keeps one Issue per actionable finding |
 | `radar-fix` | Comment `@claude fix this` on a `radar` Issue | Claude fixes it on a `radar/fix-…` branch and opens a draft pull request |
-| `build` | Every push and pull request | Builds the examples, so each fix shows a pass or fail check |
+| `build` | Pushes to `radar/fix-…` branches and every pull request | Builds the examples, so each fix shows a pass or fail check |
 
 Nothing merges automatically. Every fix is a draft pull request for a person to review.
 

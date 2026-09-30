@@ -44,10 +44,12 @@ jobs:
             8.0.x
             10.0.x
 
+      # Radar finds its own root (AdApiRadar.slnx) from the current directory, so run it from there.
       - name: Run radar
         shell: pwsh
+        working-directory: radar
         run: >
-          dotnet run --project radar/src/Radar -c Release --no-launch-profile --
+          dotnet run --project src/Radar -c Release --no-launch-profile --
           run --repo "$env:GITHUB_WORKSPACE/target" --ref HEAD
           --sln Examples.slnx --bench-path . --platform google
 
