@@ -1,10 +1,10 @@
 # Fixing radar Issues
 
-Google's `google-ads-dotnet` examples at `v25.1.0` (Google Ads API v23). Ad API Radar opens one Issue per file that breaks or changes behaviour in a newer API version. A person reviews every fix, so an honest "not verified" is better than a wrong "done".
+Google's `google-ads-dotnet` examples at `v25.1.0` (Google Ads API v23). Ad API Radar keeps one Issue listing every finding for the upgrade, grouped by file; one `@claude fix this` must fix them all in one pull request. A person reviews every fix, so an honest "not verified" is better than a wrong "done".
 
 ## Rules
 
-- **IMPORTANT:** Fix every finding in the Issue and nothing else. No reformatting, renaming or refactoring; small diffs are what make review possible.
+- **IMPORTANT:** Fix every finding in the Issue, in one pull request, and nothing else. No reformatting, renaming or refactoring; small diffs are what make review possible.
 - **IMPORTANT:** Keep the feature working. Use the replacement Google documents (quoted in the Issue's evidence); never delete the code that used a removed field.
 - Never edit `LICENSE`, `THIRD-PARTY-LICENSE.txt`, `GoogleAds.snk`, `Examples.slnx` or `.github/`.
 - Never push to `main`, merge, or turn off warnings-as-errors.
@@ -13,7 +13,7 @@ Google's `google-ads-dotnet` examples at `v25.1.0` (Google Ads API v23). Ad API 
 
 Findings "removed in v24/v25" need the newer API:
 1. Set `Google.Ads.GoogleAds` to `26.1.0` in `Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj` (first SDK with V25).
-2. In the Issue's file, move every API reference to V25: `using Google.Ads.GoogleAds.V23…` and `Services.V23.…`. **Keep** the file's own `namespace Google.Ads.GoogleAds.Examples.V23`; it is the example's name, and other files refer to it.
+2. In each file the Issue lists, move every API reference to V25: `using Google.Ads.GoogleAds.V23…` and `Services.V23.…`. **Keep** the file's own `namespace Google.Ads.GoogleAds.Examples.V23`; it is the example's name, and other files refer to it.
 3. **The SDK bump can break files you did not touch** (26.1.0 drops SDK helpers such as `PartialFailure` from V23). Build the whole project; for each newly broken file, move its API references to V25 the same way and change nothing else. List those files in the PR under "Required by the SDK bump".
 
 ## Verify before you say it is fixed
@@ -32,6 +32,6 @@ grep -oE '\b(GoogleAds|Services)\.V[0-9]+\b' <file> | grep -oE 'V[0-9]+' | sort 
 
 ## Pull request
 
-- Open a **draft** with `gh pr create --draft`, titled `Fix radar #<issue>: <file>`.
-- Body: one line per finding with what changed, the "Required by the SDK bump" list if any, `Fixes #<issue>`, and the tail of each check's output.
+- Open one **draft** with `gh pr create --draft`, titled `Fix radar #<issue>: API upgrade v23 -> v25`.
+- Body: one line per finding (numbered as in the Issue) with what changed, the "Required by the SDK bump" list if any, `Fixes #<issue>`, and the tail of each check's output.
 - The `build` workflow reruns these checks on the pull request and must be green.
