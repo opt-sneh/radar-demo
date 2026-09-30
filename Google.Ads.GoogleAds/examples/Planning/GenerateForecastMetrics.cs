@@ -15,13 +15,12 @@
 using CommandLine;
 using Google.Ads.Gax.Examples;
 using Google.Ads.GoogleAds.Lib;
-using Google.Ads.GoogleAds.V23.Common;
-using Google.Ads.GoogleAds.V23.Errors;
-using Google.Ads.GoogleAds.V23.Resources;
-using Google.Ads.GoogleAds.V23.Services;
+using Google.Ads.GoogleAds.V25.Common;
+using Google.Ads.GoogleAds.V25.Errors;
+using Google.Ads.GoogleAds.V25.Resources;
+using Google.Ads.GoogleAds.V25.Services;
 using System;
-using static Google.Ads.GoogleAds.V23.Enums.KeywordMatchTypeEnum.Types;
-using static Google.Ads.GoogleAds.V23.Enums.KeywordPlanNetworkEnum.Types;
+using static Google.Ads.GoogleAds.V25.Enums.KeywordMatchTypeEnum.Types;
 
 namespace Google.Ads.GoogleAds.Examples.V23;
 
@@ -74,7 +73,7 @@ public class GenerateForecastMetrics : ExampleBase
         CampaignToForecast campaignToForecast = CreateCampaignToForecast();
 
         KeywordPlanIdeaServiceClient keywordPlanIdeaService =
-                client.GetService(Services.V23.KeywordPlanIdeaService);
+                client.GetService(Services.V25.KeywordPlanIdeaService);
 
         GenerateKeywordForecastMetricsRequest request = new GenerateKeywordForecastMetricsRequest()
         {
@@ -97,7 +96,6 @@ public class GenerateForecastMetrics : ExampleBase
             KeywordForecastMetrics metrics = response.CampaignForecastMetrics;
 
             Console.WriteLine($"Estimated daily clicks: {metrics.Clicks}.");
-            Console.WriteLine($"Estimated daily impressions: {metrics.Impressions}.");
             Console.WriteLine($"Estimated average cpc (micros): {metrics.AverageCpcMicros}.");
         }
         catch (GoogleAdsException e)
@@ -120,9 +118,10 @@ public class GenerateForecastMetrics : ExampleBase
     /// </summary>
     private CampaignToForecast CreateCampaignToForecast()
     {
+        // NOTE: V25 removed CampaignToForecast.KeywordPlanNetwork (previously GoogleSearch);
+        // the request can no longer restrict the network.
         CampaignToForecast campaignToForecast = new CampaignToForecast()
         {
-            KeywordPlanNetwork = KeywordPlanNetwork.GoogleSearch,
             BiddingStrategy = new CampaignToForecast.Types.CampaignBiddingStrategy()
             {
                 ManualCpcBiddingStrategy = new ManualCpcBiddingStrategy()
@@ -134,11 +133,8 @@ public class GenerateForecastMetrics : ExampleBase
 
         // See https://developers.google.com/google-ads/api/reference/data/geotargets
         // for the list of geo target IDs.
-        campaignToForecast.GeoModifiers.Add(new CriterionBidModifier()
-        {
-            // Geo target constant 2840 is for USA.
-            GeoTargetConstant = ResourceNames.GeoTargetConstant(2840)
-        });
+        // Geo target constant 2840 is for USA.
+        campaignToForecast.GeoTargetConstants.Add(ResourceNames.GeoTargetConstant(2840));
 
         // See https://developers.google.com/google-ads/api/reference/data/codes-formats#languages
         // for the list of language criteria IDs.
@@ -149,39 +145,26 @@ public class GenerateForecastMetrics : ExampleBase
         // or cost per click.
         ForecastAdGroup forecastAdGroup = new ForecastAdGroup();
 
-        forecastAdGroup.BiddableKeywords.Add(new BiddableKeyword()
+        // NOTE: V25 removed per-keyword max CPC bids (BiddableKeyword.MaxCpcBidMicros), so
+        // every keyword below is forecast with the campaign-level manual CPC bid. V25 also
+        // removed ForecastAdGroup.NegativeKeywords, so the former "moon walk" negative keyword
+        // can no longer be excluded from the forecast.
+
+        forecastAdGroup.Keywords.Add(new KeywordInfo()
         {
-            MaxCpcBidMicros = 2_500_000,
-            Keyword = new KeywordInfo()
-            {
-                Text = "mars cruise",
-                MatchType = KeywordMatchType.Broad
-            }
+            Text = "mars cruise",
+            MatchType = KeywordMatchType.Broad
         });
 
-        forecastAdGroup.BiddableKeywords.Add(new BiddableKeyword()
+        forecastAdGroup.Keywords.Add(new KeywordInfo()
         {
-            MaxCpcBidMicros = 1_500_000,
-            Keyword = new KeywordInfo()
-            {
-                Text = "cheap cruise",
-                MatchType = KeywordMatchType.Phrase
-            }
+            Text = "cheap cruise",
+            MatchType = KeywordMatchType.Phrase
         });
 
-        forecastAdGroup.BiddableKeywords.Add(new BiddableKeyword()
+        forecastAdGroup.Keywords.Add(new KeywordInfo()
         {
-            MaxCpcBidMicros = 1_990_000,
-            Keyword = new KeywordInfo()
-            {
-                Text = "jupiter cruise",
-                MatchType = KeywordMatchType.Broad
-            }
-        });
-
-        forecastAdGroup.NegativeKeywords.Add(new KeywordInfo()
-        {
-            Text = "moon walk",
+            Text = "jupiter cruise",
             MatchType = KeywordMatchType.Broad
         });
 
