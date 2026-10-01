@@ -328,7 +328,8 @@ namespace Google.Ads.GoogleAds.Examples.V23
             if (response2.PartialFailureError != null)
             {
                 // Extracts the partial failure from the response status.
-                GoogleAdsFailure partialFailure = response2.PartialFailure;
+                GoogleAdsFailure partialFailure = 
+                    response2.PartialFailureError.Details[0].Unpack<GoogleAdsFailure>();
                 Console.WriteLine($"{partialFailure.Errors.Count} partial failure error(s) " +
                     $"occurred");
             }
