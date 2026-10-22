@@ -11,10 +11,11 @@ Google's `google-ads-dotnet` examples at `v25.1.0` (Google Ads API v23). Ad API 
 
 ## Moving to a newer API version
 
-Findings "removed in v24/v25" need the newer API:
-1. Set `Google.Ads.GoogleAds` to `26.1.0` in `Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj` (first SDK with V25).
-2. In each file the Issue lists, move every API reference to V25: `using Google.Ads.GoogleAds.V23…` and `Services.V23.…`. **Keep** the file's own `namespace Google.Ads.GoogleAds.Examples.V23`; it is the example's name, and other files refer to it.
-3. **The SDK bump can break files you did not touch** (26.1.0 drops SDK helpers such as `PartialFailure` from V23). Build the whole project; for each newly broken file, move its API references to V25 the same way and change nothing else. List those files in the PR under "Required by the SDK bump".
+The Issue title names the target, `v23 -> vNN`. Upgrade to that version, not an older one.
+1. Set `Google.Ads.GoogleAds` in `Google.Ads.GoogleAds/examples/Google.Ads.GoogleAds.Examples.csproj` to the first SDK that adds API vNN: the first entry reading "Added support for version NN" in https://github.com/googleads/google-ads-dotnet/blob/HEAD/CHANGELOG.md (v25 → 26.1.0, v26 → 27.5.0).
+2. In each file the Issue lists, move every API reference to VNN: `using Google.Ads.GoogleAds.V23…` and `Services.V23.…`. **Keep** the file's own `namespace Google.Ads.GoogleAds.Examples.V23`; it is the example's name, and other files refer to it.
+3. Apply each finding's suggested replacement (e.g. a renamed field) using Google's release notes quoted in the Issue.
+4. **The SDK bump can break files you did not touch** (newer SDKs drop helpers such as `PartialFailure` from V23). Build the whole project; for each newly broken file, move its API references to VNN the same way and change nothing else. List those files in the PR under "Required by the SDK bump".
 
 ## Verify before you say it is fixed
 
@@ -32,7 +33,7 @@ grep -oE '\b(GoogleAds|Services)\.V[0-9]+\b' <file> | grep -oE 'V[0-9]+' | sort 
 
 ## Pull request
 
-- Open one **draft** with `gh pr create --draft`, titled `Fix radar #<issue>: API upgrade v23 -> v25`.
+- Open one **draft** with `gh pr create --draft`, titled `Fix radar #<issue>: API upgrade v23 -> vNN` (versions from the Issue title).
 - Body: one line per finding (numbered as in the Issue) with what changed, the "Required by the SDK bump" list if any, `Fixes #<issue>`, and the tail of each check's output.
 - The `build` workflow reruns these checks on the pull request and must be green.
 
