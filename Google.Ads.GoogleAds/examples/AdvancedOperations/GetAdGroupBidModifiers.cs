@@ -15,12 +15,12 @@
 using CommandLine;
 using Google.Ads.Gax.Examples;
 using Google.Ads.GoogleAds.Lib;
-using Google.Ads.GoogleAds.V23.Errors;
-using Google.Ads.GoogleAds.V23.Resources;
-using Google.Ads.GoogleAds.V23.Services;
+using Google.Ads.GoogleAds.V26.Errors;
+using Google.Ads.GoogleAds.V26.Resources;
+using Google.Ads.GoogleAds.V26.Services;
 using Google.Api.Gax;
 using System;
-using static Google.Ads.GoogleAds.V23.Resources.AdGroupBidModifier;
+using static Google.Ads.GoogleAds.V26.Resources.AdGroupBidModifier;
 
 namespace Google.Ads.GoogleAds.Examples.V23
 {
@@ -78,7 +78,7 @@ namespace Google.Ads.GoogleAds.Examples.V23
         {
             // Get the GoogleAdsService.
             GoogleAdsServiceClient googleAdsService =
-                client.GetService(Services.V23.GoogleAdsService);
+                client.GetService(Services.V26.GoogleAdsService);
 
             string searchQuery = @"
                 SELECT
@@ -155,32 +155,32 @@ namespace Google.Ads.GoogleAds.Examples.V23
                             criterionDetails += $"Type: {agBidModifier.Device.Type}";
                             break;
 
-                        case CriterionOneofCase.HotelAdvanceBookingWindow:
+                        case CriterionOneofCase.AdvanceBookingWindow:
                             criterionDetails +=
-                                $"Min Days: {agBidModifier.HotelAdvanceBookingWindow.MinDays}," +
-                                $"Max Days: {agBidModifier.HotelAdvanceBookingWindow.MaxDays}";
+                                $"Min Days: {agBidModifier.AdvanceBookingWindow.MinDays}," +
+                                $"Max Days: {agBidModifier.AdvanceBookingWindow.MaxDays}";
                             break;
 
-                        case CriterionOneofCase.HotelCheckInDay:
+                        case CriterionOneofCase.StartDayOfWeek:
                             criterionDetails += $"Day of the week: " +
-                                $"{agBidModifier.HotelCheckInDay.DayOfWeek}";
+                                $"{agBidModifier.StartDayOfWeek.DayOfWeek}";
                             break;
 
-                        case CriterionOneofCase.HotelDateSelectionType:
+                        case CriterionOneofCase.UserSetDates:
                             criterionDetails += $"Date selection type: " +
-                                $"{agBidModifier.HotelDateSelectionType.Type}";
+                                $"{agBidModifier.UserSetDates.Type}";
                             break;
 
-                        case CriterionOneofCase.HotelLengthOfStay:
+                        case CriterionOneofCase.LengthOfBooking:
                             criterionDetails +=
-                                $"Min Nights: {agBidModifier.HotelLengthOfStay.MinNights}," +
-                                $"Max Nights: {agBidModifier.HotelLengthOfStay.MaxNights}";
+                                $"Min Days: {agBidModifier.LengthOfBooking.MinDays}," +
+                                $"Max Days: {agBidModifier.LengthOfBooking.MaxDays}";
                             break;
 
-                        case CriterionOneofCase.HotelCheckInDateRange:
+                        case CriterionOneofCase.StartDateRange:
                             criterionDetails +=
-                                $"Start Date: {agBidModifier.HotelCheckInDateRange.StartDate}," +
-                                $"End Date: {agBidModifier.HotelCheckInDateRange.EndDate}";
+                                $"Start Date: {agBidModifier.StartDateRange.StartDate}," +
+                                $"End Date: {agBidModifier.StartDateRange.EndDate}";
                             break;
                     }
                     Console.WriteLine(criterionDetails);
