@@ -16,11 +16,11 @@ using CommandLine;
 using Google.Ads.Gax.Examples;
 using Google.Ads.Gax.Lib;
 using Google.Ads.GoogleAds.Lib;
-using Google.Ads.GoogleAds.V23.Errors;
-using Google.Ads.GoogleAds.V23.Services;
+using Google.Ads.GoogleAds.V25.Errors;
+using Google.Ads.GoogleAds.V25.Services;
 using System;
 
-using static Google.Ads.GoogleAds.V23.Services.FetchIncentiveRequest.Types;
+using static Google.Ads.GoogleAds.V25.Enums.IncentiveTypeEnum.Types;
 
 namespace Google.Ads.GoogleAds.Examples.V23
 {
@@ -87,14 +87,14 @@ namespace Google.Ads.GoogleAds.Examples.V23
             string countryCode)
         {
             IncentiveServiceClient incentiveService = client.GetService(
-                Services.V23.IncentiveService);
+                Services.V25.IncentiveService);
 
             FetchIncentiveRequest request = new FetchIncentiveRequest()
             {
                 CountryCode = countryCode,
                 LanguageCode = languageCode,
                 Email = email,
-                Type = IncentiveType.Acquisition
+                IncentiveType = IncentiveType.Acquisition
             };
 
             try
